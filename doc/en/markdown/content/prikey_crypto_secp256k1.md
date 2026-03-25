@@ -135,7 +135,7 @@ N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 
 ## Secp256k1 Code
 
-In conclusion, we have the complete secp256k1 code below. You can find this code in [pabtc.secp256k1](https://github.com/mohanson/pabtc/blob/master/pabtc/secp256k1.py).
+In conclusion, we have the complete secp256k1 code below. You can find this code in [pabtc.secp256k1](https://github.com/libraries/pabtc/blob/master/pabtc/secp256k1.py).
 
 ```py
 # Prime of finite field.

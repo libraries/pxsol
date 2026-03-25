@@ -142,7 +142,7 @@ Advantages:
 - The algorithm is open source with extensive application and research support. You don't need to rely on specific software or third-party libraries to implement the algorithm; any skilled programmer can implement code based on the publicly available algorithm.
 - Even if all shares are leaked, attackers may not necessarily know you're using the SSS algorithm to protect private keys. They might think these shares are multiple private keys, which can increase the attacker's guessing difficulty. You can even actually use shares as private keys, storing small amounts of funds in them to create a honeypot deception layer. Attackers might be attracted to these small amounts and overlook the real private key. Once attackers transfer funds from the shares, you get an early warning: one of your shares has been leaked.
 
-You can find an SSS algorithm implementation for Bitcoin private keys in my pabtc library: <https://github.com/mohanson/pabtc/blob/master/example/sss.py>.
+You can find an SSS algorithm implementation for Bitcoin private keys in my pabtc library: <https://github.com/libraries/pabtc/blob/master/example/sss.py>.
 
 **Summary**
 

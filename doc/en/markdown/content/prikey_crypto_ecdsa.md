@@ -117,8 +117,8 @@ def pubkey(m: pabtc.secp256k1.Fr, r: pabtc.secp256k1.Fr, s: pabtc.secp256k1.Fr, 
 
 Again, please note that all the code snippets are publicly available on GitHub for your reference and use. If you have any questions or need further assistance, feel free to ask!
 
-- [pabtc.ecdsa](https://github.com/mohanson/pabtc/blob/master/pabtc/ecdsa.py)
-- [pabtc.secp256k1](https://github.com/mohanson/pabtc/blob/master/pabtc/secp256k1.py)
+- [pabtc.ecdsa](https://github.com/libraries/pabtc/blob/master/pabtc/ecdsa.py)
+- [pabtc.secp256k1](https://github.com/libraries/pabtc/blob/master/pabtc/secp256k1.py)
 
 ## Exercise
 

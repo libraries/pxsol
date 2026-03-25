@@ -66,7 +66,7 @@ A:
 
 Below, we implement a prime finite field using Python code. It is quite similar to the integers we use in our daily lives, but with an important distinction: all computational results must be taken modulo.
 
-The following code is borrowed from [pabtc](https://github.com/mohanson/pabtc) project; you can install it via `pip install pabtc`.
+The following code is borrowed from [pabtc](https://github.com/libraries/pabtc) project; you can install it via `pip install pabtc`.
 
 ```py
 import json

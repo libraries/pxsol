@@ -10,7 +10,7 @@ Perhaps it's curiosity about the unknown or anticipation for the possible. Havin
 
 The course primarily uses python language. In the first chapter, we will use pabtc, which is a Bitcoin library. In the following chapters, we will mainly use Solana's pxsol library. These two libraries are written by the same person as this book.
 
-- Pabtc: <https://github.com/mohanson/pabtc>
+- Pabtc: <https://github.com/libraries/pabtc>
 - Pxsol: <https://github.com/libraries/pxsol>
 
 **Language**
