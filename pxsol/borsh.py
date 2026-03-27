@@ -1,3 +1,4 @@
+import io
 import itertools
 import pxsol.io
 import struct
@@ -9,7 +10,7 @@ import typing
 
 class U8:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> int:
+    def decode(cls, reader: io.IOBase) -> int:
         return int.from_bytes(pxsol.io.read_full(reader, 1), 'little')
 
     @classmethod
@@ -21,7 +22,7 @@ class U8:
 
 class U16:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> int:
+    def decode(cls, reader: io.IOBase) -> int:
         return int.from_bytes(pxsol.io.read_full(reader, 2), 'little')
 
     @classmethod
@@ -33,7 +34,7 @@ class U16:
 
 class U32:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> int:
+    def decode(cls, reader: io.IOBase) -> int:
         return int.from_bytes(pxsol.io.read_full(reader, 4), 'little')
 
     @classmethod
@@ -45,7 +46,7 @@ class U32:
 
 class U64:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> int:
+    def decode(cls, reader: io.IOBase) -> int:
         return int.from_bytes(pxsol.io.read_full(reader, 8), 'little')
 
     @classmethod
@@ -57,7 +58,7 @@ class U64:
 
 class U128:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> int:
+    def decode(cls, reader: io.IOBase) -> int:
         return int.from_bytes(pxsol.io.read_full(reader, 16), 'little')
 
     @classmethod
@@ -69,7 +70,7 @@ class U128:
 
 class I8:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> int:
+    def decode(cls, reader: io.IOBase) -> int:
         return int.from_bytes(pxsol.io.read_full(reader, 1), 'little', signed=True)
 
     @classmethod
@@ -81,7 +82,7 @@ class I8:
 
 class I16:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> int:
+    def decode(cls, reader: io.IOBase) -> int:
         return int.from_bytes(pxsol.io.read_full(reader, 2), 'little', signed=True)
 
     @classmethod
@@ -93,7 +94,7 @@ class I16:
 
 class I32:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> int:
+    def decode(cls, reader: io.IOBase) -> int:
         return int.from_bytes(pxsol.io.read_full(reader, 4), 'little', signed=True)
 
     @classmethod
@@ -105,7 +106,7 @@ class I32:
 
 class I64:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> int:
+    def decode(cls, reader: io.IOBase) -> int:
         return int.from_bytes(pxsol.io.read_full(reader, 8), 'little', signed=True)
 
     @classmethod
@@ -117,7 +118,7 @@ class I64:
 
 class I128:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> int:
+    def decode(cls, reader: io.IOBase) -> int:
         return int.from_bytes(pxsol.io.read_full(reader, 16), 'little', signed=True)
 
     @classmethod
@@ -129,7 +130,7 @@ class I128:
 
 class F32:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> float:
+    def decode(cls, reader: io.IOBase) -> float:
         return struct.unpack('<f', pxsol.io.read_full(reader, 4))[0]
 
     @classmethod
@@ -139,7 +140,7 @@ class F32:
 
 class F64:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> float:
+    def decode(cls, reader: io.IOBase) -> float:
         return struct.unpack('<d', pxsol.io.read_full(reader, 8))[0]
 
     @classmethod
@@ -149,7 +150,7 @@ class F64:
 
 class Bool:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> bool:
+    def decode(cls, reader: io.IOBase) -> bool:
         return pxsol.io.read_full(reader, 1)[0] != 0
 
     @classmethod
@@ -159,7 +160,7 @@ class Bool:
 
 class Enum:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> int:
+    def decode(cls, reader: io.IOBase) -> int:
         return U8.decode(reader)
 
     @classmethod
@@ -169,7 +170,7 @@ class Enum:
 
 class String:
     @classmethod
-    def decode(cls, reader: typing.BinaryIO) -> str:
+    def decode(cls, reader: io.IOBase) -> str:
         return pxsol.io.read_full(reader, U32.decode(reader)).decode()
 
     @classmethod
@@ -182,10 +183,10 @@ class Array:
         self.kype = kype
         self.size = size
 
-    def decode(self, reader: typing.BinaryIO) -> typing.List[typing.Any]:
+    def decode(self, reader: io.IOBase) -> list[typing.Any]:
         return [self.kype.decode(reader) for _ in range(self.size)]
 
-    def encode(self, pylist: typing.List[typing.Any]) -> bytearray:
+    def encode(self, pylist: list[typing.Any]) -> bytearray:
         return bytearray(itertools.chain(*[self.kype.encode(e) for e in pylist]))
 
 
@@ -193,33 +194,33 @@ class Slice:
     def __init__(self, kype: typing.Any) -> None:
         self.kype = kype
 
-    def decode(self, reader: typing.BinaryIO) -> typing.List[typing.Any]:
+    def decode(self, reader: io.IOBase) -> list[typing.Any]:
         return [self.kype.decode(reader) for _ in range(U32.decode(reader))]
 
-    def encode(self, pylist: typing.List[typing.Any]) -> bytearray:
+    def encode(self, pylist: list[typing.Any]) -> bytearray:
         return U32.encode(len(pylist)) + bytearray(itertools.chain(*[self.kype.encode(e) for e in pylist]))
 
 
 class Struct:
-    def __init__(self, kype: typing.List[typing.Any]) -> None:
+    def __init__(self, kype: list[typing.Any]) -> None:
         self.kype = kype
 
-    def decode(self, reader: typing.BinaryIO) -> typing.List[typing.Any]:
+    def decode(self, reader: io.IOBase) -> list[typing.Any]:
         return [kype.decode(reader) for kype in self.kype]
 
-    def encode(self, pylist: typing.List[typing.Any]) -> bytearray:
+    def encode(self, pylist: list[typing.Any]) -> bytearray:
         assert len(pylist) == len(self.kype)
         return bytearray(itertools.chain(*[e[0].encode(e[1]) for e in zip(self.kype, pylist)]))
 
 
 class Dict:
-    def __init__(self, kype: typing.List[typing.Any]) -> None:
+    def __init__(self, kype: list[typing.Any]) -> None:
         self.kype = kype
 
-    def decode(self, reader: typing.BinaryIO) -> typing.Dict[typing.Any, typing.Any]:
+    def decode(self, reader: io.IOBase) -> dict[typing.Any, typing.Any]:
         return dict([[self.kype[0].decode(reader), self.kype[1].decode(reader)] for _ in range(U32.decode(reader))])
 
-    def encode(self, pydict: typing.Dict[typing.Any, typing.Any]) -> bytearray:
+    def encode(self, pydict: dict[typing.Any, typing.Any]) -> bytearray:
         data = []
         for k, v in pydict.items():
             data.append([self.kype[0].encode(k), self.kype[1].encode(v)])
@@ -235,20 +236,20 @@ class Option:
     def __init__(self, kype: typing.Any) -> None:
         self.kype = kype
 
-    def decode(self, reader: typing.BinaryIO) -> typing.Optional[typing.Any]:
+    def decode(self, reader: io.IOBase) -> typing.Any | None:
         return self.kype.decode(reader) if U8.decode(reader) != 0 else None
 
-    def encode(self, pydata: typing.Optional[typing.Any]) -> bytearray:
+    def encode(self, pydata: typing.Any | None) -> bytearray:
         if pydata is not None:
             return bytearray([1]) + self.kype.encode(pydata)
         return bytearray([0])
 
 
 class Custom:
-    def __init__(self, func: typing.Callable[[typing.BinaryIO], typing.Any]) -> None:
+    def __init__(self, func: typing.Callable[[io.IOBase], typing.Any]) -> None:
         self.func = func
 
-    def decode(self, reader: typing.BinaryIO) -> typing.Any:
+    def decode(self, reader: io.IOBase) -> typing.Any:
         return self.func(reader)
 
     def encode(self, pydata: bytearray) -> bytearray:

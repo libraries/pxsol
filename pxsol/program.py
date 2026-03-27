@@ -2,7 +2,6 @@ import hashlib
 import pxsol.bincode
 import pxsol.borsh
 import pxsol.core
-import typing
 
 # Solana programs mainly use two serialization formats, bincode and borsh. Their specifications can be found on the
 # following web pages:
@@ -36,7 +35,7 @@ class AddressLookupTable:
         return pxsol.bincode.Enum.encode(1)
 
     @classmethod
-    def extend_lookup_table(cls, pubkey: typing.List[pxsol.core.PubKey]) -> bytearray:
+    def extend_lookup_table(cls, pubkey: list[pxsol.core.PubKey]) -> bytearray:
         # Extend an address lookup table with new addresses. Account references:
         # 0. -w address lookup table account to extend.
         # 1. sr current authority.
@@ -519,7 +518,7 @@ class Token:
         cls,
         decimals: int,
         auth_mint: pxsol.core.PubKey,
-        auth_freeze: typing.Optional[pxsol.core.PubKey],
+        auth_freeze: pxsol.core.PubKey | None,
     ) -> bytearray:
         # Initializes a new mint and optionally deposits all the newly minted tokens in an account. Account references:
         # 0. -w the mint to initialize.
@@ -572,7 +571,7 @@ class Token:
         return pxsol.borsh.Enum.encode(0x05)
 
     @classmethod
-    def set_authority(cls, auth_type: int, auth: typing.Optional[pxsol.core.PubKey]) -> bytearray:
+    def set_authority(cls, auth_type: int, auth: pxsol.core.PubKey | None) -> bytearray:
         # Sets a new authority of a mint or account. Argument auth_type is an enumeration value, please refer to the
         # rust source code. Account references:
         # 0. -w the mint or account to change the authority of.
@@ -704,7 +703,7 @@ class Token:
         cls,
         decimals: int,
         auth_mint: pxsol.core.PubKey,
-        auth_freeze: typing.Optional[pxsol.core.PubKey],
+        auth_freeze: pxsol.core.PubKey | None,
     ) -> bytearray:
         # Like initialize_mint(), but does not require the Rent sysvar to be provided. Account references:
         # 0. -w the mint to initialize.
@@ -715,7 +714,7 @@ class Token:
         ]).encode([decimals, auth_mint.p, auth_freeze.p if auth_freeze is not None else None])
 
     @classmethod
-    def get_account_data_size(cls, extension_type: typing.List[int]) -> bytearray:
+    def get_account_data_size(cls, extension_type: list[int]) -> bytearray:
         # Gets the required size of an account for the given mint as a little-endian u64. Account references:
         # 0. -r the mint to calculate for.
         return pxsol.borsh.Enum.encode(0x15) + pxsol.borsh.Slice(pxsol.borsh.U16).encode(extension_type)
@@ -739,7 +738,7 @@ class Token:
         return pxsol.borsh.Enum.encode(0x18) + pxsol.borsh.String.encode(amount)
 
     @classmethod
-    def initialize_mint_close_authority(cls, close_authority: typing.Optional[pxsol.core.PubKey]) -> bytearray:
+    def initialize_mint_close_authority(cls, close_authority: pxsol.core.PubKey | None) -> bytearray:
         # Initialize the close account authority on a new mint. Account references:
         # 0. -w the mint to initialize.
         return pxsol.borsh.Enum.encode(0x19) + pxsol.borsh.Struct([
@@ -762,7 +761,7 @@ class Token:
         return pxsol.borsh.Enum.encode(0x1c)
 
     @classmethod
-    def reallocate(cls, extension_types: typing.List[int]) -> bytearray:
+    def reallocate(cls, extension_types: list[int]) -> bytearray:
         # Check to see if a token account is large enough for a list of extension types, and if not, use reallocation
         # to increase the data size. Account references:
         # 0. -w the account to reallocate.
@@ -858,7 +857,7 @@ class Token:
         return pxsol.borsh.Enum.encode(0x2c)
 
     @classmethod
-    def unwrap_lamports(cls, amount: typing.Optional[int]) -> bytearray:
+    def unwrap_lamports(cls, amount: int | None) -> bytearray:
         # Transfer lamports from a native SOL account to a destination account. This is useful to unwrap lamports
         # from a wrapped SOL account. Account references:
         # 0. -w The source account.
@@ -969,7 +968,7 @@ class TokenExtensionMetadata:
         ]).encode([discriminator, idempotent, key])
 
     @classmethod
-    def update_authority(cls, auth: typing.Optional[pxsol.core.PubKey]) -> bytearray:
+    def update_authority(cls, auth: pxsol.core.PubKey | None) -> bytearray:
         # Updates the token-metadata authority. Account references:
         # 0. -w metadata account.
         # 1. sr current update authority.
@@ -979,7 +978,7 @@ class TokenExtensionMetadata:
         ]).encode([discriminator, auth.p if auth is not None else None])
 
     @classmethod
-    def emit(cls, start: typing.Optional[int], end: typing.Optional[int]) -> bytearray:
+    def emit(cls, start: int | None, end: int | None) -> bytearray:
         # Emits the token-metadata as return data. Account references:
         # 0. -r metadata account.
         discriminator = bytearray(hashlib.sha256(b'spl_token_metadata_interface:emitter').digest()[:8])

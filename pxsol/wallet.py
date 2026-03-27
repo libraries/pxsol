@@ -12,8 +12,8 @@ class WalletHelper:
     @classmethod
     def requisition_send(
         cls,
-        prikey: typing.List[pxsol.core.PriKey],
-        rqlist: typing.List[pxsol.core.Requisition],
+        prikey: list[pxsol.core.PriKey],
+        rqlist: list[pxsol.core.Requisition],
     ) -> bytearray:
         # Sends a transaction built from the given requisitions and signed with the given private keys. This function
         # will wait until the transaction is confirmed. Returns the first signature of the transaction, also known as
@@ -315,7 +315,7 @@ class Wallet:
     def __repr__(self) -> str:
         return json.dumps(self.json())
 
-    def json(self) -> typing.Dict:
+    def json(self) -> dict:
         return {
             'prikey': self.prikey.base58(),
             'pubkey': self.pubkey.base58(),
@@ -376,12 +376,12 @@ class Wallet:
         seed.extend(mint.p)
         return pxsol.program.AssociatedTokenAccount.pubkey.derive_pda(seed)[0]
 
-    def spl_balance(self, mint: pxsol.core.PubKey) -> typing.List[int]:
+    def spl_balance(self, mint: pxsol.core.PubKey) -> list[int]:
         # Returns the current token balance and the decimals of the token.
         r = pxsol.rpc.get_token_account_balance(self.spl_account(mint).base58(), {})['value']
         return [int(r['amount']), r['decimals']]
 
-    def spl_create(self, decimals: int, extension: typing.Dict[str, typing.Any]) -> pxsol.core.PubKey:
+    def spl_create(self, decimals: int, extension: dict[str, typing.Any]) -> pxsol.core.PubKey:
         # Create a new token mint with specified decimals and extension. Returns the mint public key.
         # Supported extensions:
         # * default_account_state: int

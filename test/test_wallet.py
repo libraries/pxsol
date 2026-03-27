@@ -2,10 +2,9 @@ import base64
 import pathlib
 import pxsol
 import random
-import typing
 
 
-def call_logs(program_pubkey: pxsol.core.PubKey) -> typing.List[str]:
+def call_logs(program_pubkey: pxsol.core.PubKey) -> list[str]:
     user = pxsol.wallet.Wallet(pxsol.core.PriKey.int_decode(1))
     rq = pxsol.core.Requisition(program_pubkey, [], bytearray())
     tx = pxsol.core.Transaction.requisition_decode(user.pubkey, [rq])

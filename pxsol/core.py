@@ -120,7 +120,7 @@ class PubKey:
         assert not data.endswith(bytearray('ProgramDerivedAddress'.encode()))
         return PubKey(bytearray(hashlib.sha256(data).digest()))
 
-    def derive_pda(self, seed: bytearray) -> typing.Tuple[PubKey, int]:
+    def derive_pda(self, seed: bytearray) -> tuple[PubKey, int]:
         # Program Derived Address (PDA). PDAs are addresses derived deterministically using a combination of
         # user-defined seeds, a bump seed, and a program's ID.
         # See: https://solana.com/docs/core/pda
@@ -174,7 +174,7 @@ class AccountMeta:
     def __repr__(self) -> str:
         return json.dumps(self.json())
 
-    def json(self) -> typing.Dict[str, str]:
+    def json(self) -> dict[str, str]:
         return {
             'pubkey': self.pubkey.base58(),
             'mode': ['-r', '-w', 'sr', 'sw'][self.mode],
@@ -188,8 +188,8 @@ class AddressTableLookup:
     def __init__(
         self,
         account_key: PubKey,
-        writable_indexes: typing.List[int],
-        readonly_indexes: typing.List[int],
+        writable_indexes: list[int],
+        readonly_indexes: list[int],
     ) -> None:
         self.account_key = account_key  # Address lookup table account key.
         self.writable_indexes = writable_indexes  # List of indexes used to load writable account addresses.
@@ -198,7 +198,7 @@ class AddressTableLookup:
     def __repr__(self) -> str:
         return json.dumps(self.json())
 
-    def json(self) -> typing.Dict[str, typing.Any]:
+    def json(self) -> dict[str, typing.Any]:
         return {
             'account_key': self.account_key.base58(),
             'writable_indexes': self.writable_indexes,
@@ -229,7 +229,7 @@ class AddressTableLookup:
 class Requisition:
     # A directive for a single invocation of a solana program.
 
-    def __init__(self, program: PubKey, account: typing.List[AccountMeta], data: bytearray) -> None:
+    def __init__(self, program: PubKey, account: list[AccountMeta], data: bytearray) -> None:
         self.program = program
         self.account = account
         self.data = data
@@ -237,7 +237,7 @@ class Requisition:
     def __repr__(self) -> str:
         return json.dumps(self.json())
 
-    def json(self) -> typing.Dict[str, typing.Any]:
+    def json(self) -> dict[str, typing.Any]:
         return {
             'program': self.program.base58(),
             'account': [e.json() for e in self.account],
@@ -248,7 +248,7 @@ class Requisition:
 class Instruction:
     # A compact encoding of an instruction.
 
-    def __init__(self, program: int, account: typing.List[int], data: bytearray) -> None:
+    def __init__(self, program: int, account: list[int], data: bytearray) -> None:
         # Identifies an on-chain program that will process the instruction. This is represented as an u8 index pointing
         # to an account address within the account addresses array.
         self.program = program
@@ -261,7 +261,7 @@ class Instruction:
     def __repr__(self) -> str:
         return json.dumps(self.json())
 
-    def json(self) -> typing.Dict[str, typing.Any]:
+    def json(self) -> dict[str, typing.Any]:
         return {
             'program': self.program,
             'account': self.account,
@@ -307,7 +307,7 @@ class MessageHeader:
     def __repr__(self) -> str:
         return json.dumps(self.json())
 
-    def json(self) -> typing.List:
+    def json(self) -> list:
         return [self.required_signatures, self.readonly_signatures, self.readonly]
 
     def serialize(self) -> bytearray:
@@ -329,9 +329,9 @@ class Message:
     def __init__(
         self,
         header: MessageHeader,
-        account_keys: typing.List[PubKey],
+        account_keys: list[PubKey],
         recent_blockhash: bytearray,
-        instructions: typing.List[Instruction]
+        instructions: list[Instruction]
     ) -> None:
         self.header = header
         self.account_keys = account_keys
@@ -341,7 +341,7 @@ class Message:
     def __repr__(self) -> str:
         return json.dumps(self.json())
 
-    def json(self) -> typing.Dict[str, typing.Any]:
+    def json(self) -> dict[str, typing.Any]:
         return {
             'header': self.header.json(),
             'account_keys': [e.base58() for e in self.account_keys],
@@ -383,10 +383,10 @@ class MessageV0:
     def __init__(
         self,
         header: MessageHeader,
-        account_keys: typing.List[PubKey],
+        account_keys: list[PubKey],
         recent_blockhash: bytearray,
-        instructions: typing.List[Instruction],
-        address_table_lookups: typing.List[AddressTableLookup],
+        instructions: list[Instruction],
+        address_table_lookups: list[AddressTableLookup],
     ) -> None:
         self.header = header
         self.account_keys = account_keys
@@ -401,7 +401,7 @@ class MessageV0:
         # Downgrade to a legacy message (without address table lookups).
         return Message(self.header, self.account_keys, self.recent_blockhash, self.instructions)
 
-    def json(self) -> typing.Dict[str, typing.Any]:
+    def json(self) -> dict[str, typing.Any]:
         r = self.downgrade().json()
         r['address_table_lookups'] = [e.json() for e in self.address_table_lookups]
         return r
@@ -433,20 +433,20 @@ class Transaction:
     # See: https://github.com/anza-xyz/solana-sdk/blob/master/transaction/src/lib.rs
     # See: https://docs.rs/solana-transaction/latest/solana_transaction/struct.Transaction.html
 
-    def __init__(self, signatures: typing.List[bytearray], message: Message) -> None:
+    def __init__(self, signatures: list[bytearray], message: Message) -> None:
         self.signatures = signatures
         self.message = message
 
     def __repr__(self) -> str:
         return json.dumps(self.json())
 
-    def json(self) -> typing.Dict[str, typing.Any]:
+    def json(self) -> dict[str, typing.Any]:
         return {
             'signatures': [pxsol.base58.encode(e) for e in self.signatures],
             'message': self.message.json()
         }
 
-    def requisition(self) -> typing.List[Requisition]:
+    def requisition(self) -> list[Requisition]:
         # Convert the transaction to requisitions.
         m3 = self.message.header.required_signatures - self.message.header.readonly_signatures
         m2 = self.message.header.readonly_signatures
@@ -461,15 +461,15 @@ class Transaction:
         return r
 
     @classmethod
-    def requisition_decode(cls, pubkey: PubKey, data: typing.List[Requisition]) -> Transaction:
+    def requisition_decode(cls, pubkey: PubKey, data: list[Requisition]) -> Transaction:
         # Convert the requisitions to transaction. The given pubkey is the fee payer, means which one pays the
         # transaction. The fee payer is always writable and signer.
-        account_flat: typing.List[AccountMeta] = [AccountMeta(pubkey, 3)]
+        account_flat: list[AccountMeta] = [AccountMeta(pubkey, 3)]
         for r in data:
             account_flat.append(AccountMeta(r.program, 0))
             account_flat.extend(r.account)
-        account_list: typing.List[AccountMeta] = []
-        account_dict: typing.Dict[PubKey, int] = {}
+        account_list: list[AccountMeta] = []
+        account_dict: dict[PubKey, int] = {}
         for a in account_flat:
             if a.pubkey not in account_dict:
                 account_list.append(a)
@@ -507,7 +507,7 @@ class Transaction:
             s.append(pxsol.io.read_full(reader, 64))
         return Transaction(s, Message.serialize_decode_reader(reader))
 
-    def sign(self, prikey: typing.List[PriKey]) -> None:
+    def sign(self, prikey: list[PriKey]) -> None:
         # Sign the transaction using the given private keys.
         assert self.message.header.required_signatures == len(prikey)
         demand = self.message.account_keys[:self.message.header.required_signatures]
@@ -522,14 +522,14 @@ class TransactionV0:
     # An atomically-committed sequence of instructions (v0).
     # See: https://github.com/anza-xyz/solana-sdk/blob/master/transaction/src/versioned/mod.rs
 
-    def __init__(self, signatures: typing.List[bytearray], message: MessageV0) -> None:
+    def __init__(self, signatures: list[bytearray], message: MessageV0) -> None:
         self.signatures = signatures
         self.message = message
 
     def __repr__(self) -> str:
         return json.dumps(self.json())
 
-    def json(self) -> typing.Dict[str, typing.Any]:
+    def json(self) -> dict[str, typing.Any]:
         return {
             'signatures': [pxsol.base58.encode(e) for e in self.signatures],
             'message': self.message.json()
@@ -554,7 +554,7 @@ class TransactionV0:
             s.append(pxsol.io.read_full(reader, 64))
         return TransactionV0(s, MessageV0.serialize_decode_reader(reader))
 
-    def sign(self, prikey: typing.List[PriKey]) -> None:
+    def sign(self, prikey: list[PriKey]) -> None:
         # Sign the transaction using the given private keys.
         assert self.message.header.required_signatures == len(prikey)
         demand = self.message.account_keys[:self.message.header.required_signatures]
@@ -586,7 +586,7 @@ class TokenExtensionMetadataPointer:
     def __repr__(self) -> str:
         return json.dumps(self.json())
 
-    def json(self) -> typing.Dict[str, str]:
+    def json(self) -> dict[str, str]:
         return {
             'auth': self.auth.base58(),
             'hold': self.hold.base58(),
@@ -622,7 +622,7 @@ class TokenExtensionMetadata:
         name: str,
         symbol: str,
         uri: str,
-        addition: typing.Dict[str, str],
+        addition: dict[str, str],
     ) -> None:
         self.auth = auth  # The authority that can sign to update the metadata.
         self.mint = mint  # The associated mint, used to counter spoofing to be sure that metadata belongs to.
@@ -634,7 +634,7 @@ class TokenExtensionMetadata:
     def __repr__(self) -> str:
         return json.dumps(self.json())
 
-    def json(self) -> typing.Dict[str, typing.Any]:
+    def json(self) -> dict[str, typing.Any]:
         return {
             'auth': self.auth.base58(),
             'mint': self.mint.base58(),
@@ -676,12 +676,12 @@ class TokenMint:
 
     def __init__(
         self,
-        auth_mint: typing.Optional[PubKey],
+        auth_mint: PubKey | None,
         supply: int,
         decimals: int,
         inited: bool,
-        auth_freeze: typing.Optional[PubKey],
-        extensions: typing.Dict[int, bytearray],
+        auth_freeze: PubKey | None,
+        extensions: dict[int, bytearray],
     ) -> None:
         self.auth_mint = auth_mint  # Optional authority used to mint new tokens.
         self.supply = supply  # Total supply of tokens.
@@ -702,7 +702,7 @@ class TokenMint:
     def extension_metadata(self) -> TokenExtensionMetadata:
         return TokenExtensionMetadata.serialize_decode(self.extensions[0x13])
 
-    def json(self) -> typing.Dict[str, typing.Any]:
+    def json(self) -> dict[str, typing.Any]:
         extensions = {}
         for k, v in self.extensions.items():
             # Decode known extensions.

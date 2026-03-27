@@ -1,6 +1,5 @@
 import io
 import pxsol.io
-import typing
 
 # Compact-u16 Encoding Specification
 #
@@ -50,7 +49,7 @@ def decode(data: bytearray) -> int:
     return decode_reader(io.BytesIO(data))
 
 
-def decode_reader(reader: typing.BinaryIO) -> int:
+def decode_reader(reader: io.IOBase) -> int:
     # Decode from a reader. Raises EOFError or AssertionError on invalid data.
     c = pxsol.io.read_full(reader, 1)[0]
     if c <= 0x7f:
