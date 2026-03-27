@@ -1,12 +1,6 @@
 # Pxsol: Solana Library For Humans
 
-Pxsol is a project that aims to provide human-friendly interfaces for common solana operations. Using pxsol, you can easily and happily complete everything you want to do on sol.
-
-Features:
-
-- No third-party dependencies, everything is visible.
-- Incredibly simple. Just like its description says, for humanity.
-- Has a built-in wallet, most of the on-chain operations can be completed through it.
+Pxsol is a project that aims to provide human-friendly interfaces for common Solana operations. It's zero-dependency and pure-python, providing a secure and simple way to interact with the Solana network. Whether you're a beginner looking to learn about Solana or an experienced developer seeking a straightforward library, pxsol has got you covered.
 
 ## Installation
 
