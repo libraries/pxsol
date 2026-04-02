@@ -25,11 +25,10 @@ The implementation code is as follows:
 ```py
 import itertools
 import random
-import typing
 import pabtc.secp256k1
 
 
-def sign(prikey: pabtc.secp256k1.Fr, m: pabtc.secp256k1.Fr) -> typing.Tuple[pabtc.secp256k1.Fr, pabtc.secp256k1.Fr, int]:
+def sign(prikey: pabtc.secp256k1.Fr, m: pabtc.secp256k1.Fr) -> tuple[pabtc.secp256k1.Fr, pabtc.secp256k1.Fr, int]:
     # https://www.secg.org/sec1-v2.pdf
     # 4.1.3 Signing Operation
     for _ in range(64):

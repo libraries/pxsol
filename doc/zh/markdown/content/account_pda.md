@@ -45,7 +45,7 @@ class PubKey:
         assert len(p) == 32
         self.p = p
 
-    def derive_pda(self, seed: bytearray) -> typing.Tuple[PubKey, int]:
+    def derive_pda(self, seed: bytearray) -> tuple[PubKey, int]:
         # Program Derived Address (PDA). PDAs are addresses derived deterministically using a combination of
         # user-defined seeds, a bump seed, and a program's ID.
         # See: https://solana.com/docs/core/pda
