@@ -30,21 +30,6 @@ def test_loader_v3():
     user.program_closed(program_pubkey)
 
 
-def test_loader_v4():
-    if pxsol.rpc.get_account_info(pxsol.program.LoaderV4.pubkey.base58(), {}) is None:
-        pytest.skip('Agave 4.2.2 does not provide the abandoned loader-v4 builtin')
-    user = pxsol.wallet.WalletLoaderV4(pxsol.core.PriKey.int_decode(1))
-    program_hello_solana = bytearray(pathlib.Path('res/program_1.so').read_bytes())
-    program_hello_update = bytearray(pathlib.Path('res/program_2.so').read_bytes())
-    program_pubkey = user.program_deploy(program_hello_solana)
-    assert call_logs(program_pubkey)[1] == 'Program log: Hello Solana!'
-    user.program_update(program_pubkey, program_hello_update)
-    assert call_logs(program_pubkey)[1] == 'Program log: Hello Solana! Hello Update!'
-    user.program_update(program_pubkey, program_hello_solana)
-    assert call_logs(program_pubkey)[1] == 'Program log: Hello Solana!'
-    user.program_closed(program_pubkey)
-
-
 def test_program():
     user = pxsol.wallet.Wallet(pxsol.core.PriKey.int_decode(1))
     program_hello_solana = bytearray(pathlib.Path('res/program_1.so').read_bytes())

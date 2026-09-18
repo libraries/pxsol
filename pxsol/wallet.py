@@ -170,142 +170,6 @@ class WalletLoaderV3:
         pxsol.rpc.wait([txid])
 
 
-class WalletLoaderV4:
-    # A built-in solana wallet that can be used to perform program loader v4 operations.
-
-    def __init__(self, prikey: pxsol.core.PriKey) -> None:
-        self.prikey = prikey
-        self.pubkey = prikey.pubkey()
-
-    def program_closed(self, program: pxsol.core.PubKey) -> None:
-        # Close a program. The sol allocated to the on-chain program can be fully recovered by performing this action.
-        r0 = pxsol.core.Requisition(pxsol.program.LoaderV4.pubkey, [], bytearray())
-        r0.account.append(pxsol.core.AccountMeta(program, 1))
-        r0.account.append(pxsol.core.AccountMeta(self.pubkey, 2))
-        r0.data = pxsol.program.LoaderV4.retract()
-        r1 = pxsol.core.Requisition(pxsol.program.LoaderV4.pubkey, [], bytearray())
-        r1.account.append(pxsol.core.AccountMeta(program, 1))
-        r1.account.append(pxsol.core.AccountMeta(self.pubkey, 2))
-        r1.account.append(pxsol.core.AccountMeta(self.pubkey, 1))
-        r1.data = pxsol.program.LoaderV4.set_program_length(0)
-        tx = pxsol.core.Transaction.requisition_decode(self.pubkey, [r0, r1])
-        tx.message.recent_blockhash = pxsol.base58.decode(pxsol.rpc.get_latest_blockhash({})['blockhash'])
-        tx.sign([self.prikey])
-        txid = pxsol.rpc.send_transaction(base64.b64encode(tx.serialize()).decode(), {})
-        pxsol.rpc.wait([txid])
-
-    def program_deploy(self, bincode: bytearray) -> pxsol.core.PubKey:
-        # Deploying a program on solana, returns the program's public key.
-        tempory_prikey = pxsol.core.PriKey.random()
-        program = tempory_prikey.pubkey()
-        pxsol.log.debugln(f'pxsol: program prikey={tempory_prikey}')
-        pxsol.log.debugln(f'pxsol: program pubkey={program}')
-        program_real_size = pxsol.program.LoaderV4.size_program_data + len(bincode)
-        # Create a program account and set its length.
-        r0 = pxsol.core.Requisition(pxsol.program.System.pubkey, [], bytearray())
-        r0.account.append(pxsol.core.AccountMeta(self.pubkey, 3))
-        r0.account.append(pxsol.core.AccountMeta(program, 3))
-        r0.data = pxsol.program.System.create_account(
-            pxsol.rpc.get_minimum_balance_for_rent_exemption(program_real_size, {}),
-            0,
-            pxsol.program.LoaderV4.pubkey,
-        )
-        r1 = pxsol.core.Requisition(pxsol.program.LoaderV4.pubkey, [], bytearray())
-        r1.account.append(pxsol.core.AccountMeta(program, 1))
-        r1.account.append(pxsol.core.AccountMeta(self.pubkey, 2))
-        r1.account.append(pxsol.core.AccountMeta(self.pubkey, 1))
-        r1.data = pxsol.program.LoaderV4.set_program_length(len(bincode))
-        tx = pxsol.core.Transaction.requisition_decode(self.pubkey, [r0, r1])
-        tx.message.recent_blockhash = pxsol.base58.decode(pxsol.rpc.get_latest_blockhash({})['blockhash'])
-        tx.sign([self.prikey, tempory_prikey])
-        txid = pxsol.rpc.send_transaction(base64.b64encode(tx.serialize()).decode(), {})
-        pxsol.rpc.wait([txid])
-        # Breaks up the program byte-code into ~1KB chunks and sends transactions to write each chunk with the write
-        # buffer instruction.
-        size = 1012
-        hall = []
-        for i in range(0, len(bincode), size):
-            elem = bincode[i:i+size]
-            rq = pxsol.core.Requisition(pxsol.program.LoaderV4.pubkey, [], bytearray())
-            rq.account.append(pxsol.core.AccountMeta(program, 1))
-            rq.account.append(pxsol.core.AccountMeta(self.pubkey, 2))
-            rq.data = pxsol.program.LoaderV4.write(i, elem)
-            tx = pxsol.core.Transaction.requisition_decode(self.pubkey, [rq])
-            tx.message.recent_blockhash = pxsol.base58.decode(pxsol.rpc.get_latest_blockhash({})['blockhash'])
-            tx.sign([self.prikey])
-            txid = pxsol.rpc.send_transaction(base64.b64encode(tx.serialize()).decode(), {})
-            hall.append(txid)
-        pxsol.rpc.wait(hall)
-        # Deploy.
-        rq = pxsol.core.Requisition(pxsol.program.LoaderV4.pubkey, [], bytearray())
-        rq.account.append(pxsol.core.AccountMeta(program, 1))
-        rq.account.append(pxsol.core.AccountMeta(self.pubkey, 2))
-        rq.data = pxsol.program.LoaderV4.deploy()
-        tx = pxsol.core.Transaction.requisition_decode(self.pubkey, [rq])
-        tx.message.recent_blockhash = pxsol.base58.decode(pxsol.rpc.get_latest_blockhash({})['blockhash'])
-        tx.sign([self.prikey])
-        txid = pxsol.rpc.send_transaction(base64.b64encode(tx.serialize()).decode(), {})
-        pxsol.rpc.wait([txid])
-        return program
-
-    def program_update(self, program: pxsol.core.PubKey, bincode: bytearray) -> None:
-        # Updating an existing solana program by new program data and the same program id.
-        program_info = pxsol.rpc.get_account_info(program.base58(), {})
-        assert len(base64.b64decode(program_info['data'][0])) == program_info['space']
-        program_real_size = program_info['space']
-        program_want_size = pxsol.program.LoaderV4.size_program_data + len(bincode)
-        rs = []
-        rq = pxsol.core.Requisition(pxsol.program.LoaderV4.pubkey, [], bytearray())
-        rq.account.append(pxsol.core.AccountMeta(program, 1))
-        rq.account.append(pxsol.core.AccountMeta(self.pubkey, 2))
-        rq.data = pxsol.program.LoaderV4.retract()
-        rs.append(rq)
-        if program_want_size > program_real_size:
-            addi = pxsol.rpc.get_minimum_balance_for_rent_exemption(program_want_size, {}) - program_info['lamports']
-            rq = pxsol.core.Requisition(pxsol.program.System.pubkey, [], bytearray())
-            rq.account.append(pxsol.core.AccountMeta(self.pubkey, 3))
-            rq.account.append(pxsol.core.AccountMeta(program, 1))
-            rq.data = pxsol.program.System.transfer(addi)
-            rs.append(rq)
-        rq = pxsol.core.Requisition(pxsol.program.LoaderV4.pubkey, [], bytearray())
-        rq.account.append(pxsol.core.AccountMeta(program, 1))
-        rq.account.append(pxsol.core.AccountMeta(self.pubkey, 2))
-        rq.account.append(pxsol.core.AccountMeta(self.pubkey, 1))
-        rq.data = pxsol.program.LoaderV4.set_program_length(len(bincode))
-        rs.append(rq)
-        tx = pxsol.core.Transaction.requisition_decode(self.pubkey, rs)
-        tx.message.recent_blockhash = pxsol.base58.decode(pxsol.rpc.get_latest_blockhash({})['blockhash'])
-        tx.sign([self.prikey])
-        txid = pxsol.rpc.send_transaction(base64.b64encode(tx.serialize()).decode(), {})
-        pxsol.rpc.wait([txid])
-        # Breaks up the program byte-code into ~1KB chunks and sends transactions to write each chunk with the write
-        # buffer instruction.
-        size = 1012
-        hall = []
-        for i in range(0, len(bincode), size):
-            elem = bincode[i:i+size]
-            rq = pxsol.core.Requisition(pxsol.program.LoaderV4.pubkey, [], bytearray())
-            rq.account.append(pxsol.core.AccountMeta(program, 1))
-            rq.account.append(pxsol.core.AccountMeta(self.pubkey, 2))
-            rq.data = pxsol.program.LoaderV4.write(i, elem)
-            tx = pxsol.core.Transaction.requisition_decode(self.pubkey, [rq])
-            tx.message.recent_blockhash = pxsol.base58.decode(pxsol.rpc.get_latest_blockhash({})['blockhash'])
-            tx.sign([self.prikey])
-            txid = pxsol.rpc.send_transaction(base64.b64encode(tx.serialize()).decode(), {})
-            hall.append(txid)
-        pxsol.rpc.wait(hall)
-        # Deploy
-        rq = pxsol.core.Requisition(pxsol.program.LoaderV4.pubkey, [], bytearray())
-        rq.account.append(pxsol.core.AccountMeta(program, 1))
-        rq.account.append(pxsol.core.AccountMeta(self.pubkey, 2))
-        rq.data = pxsol.program.LoaderV4.deploy()
-        tx = pxsol.core.Transaction.requisition_decode(self.pubkey, [rq])
-        tx.message.recent_blockhash = pxsol.base58.decode(pxsol.rpc.get_latest_blockhash({})['blockhash'])
-        tx.sign([self.prikey])
-        txid = pxsol.rpc.send_transaction(base64.b64encode(tx.serialize()).decode(), {})
-        pxsol.rpc.wait([txid])
-
-
 class Wallet:
     # A built-in solana wallet that can be used to perform most on-chain operations.
 
@@ -328,8 +192,6 @@ class Wallet:
         program_host = pxsol.core.PubKey.base58_decode(program_info['owner'])
         if program_host == pxsol.program.LoaderV3.pubkey:
             return WalletLoaderV3(self.prikey).program_closed(program)
-        if program_host == pxsol.program.LoaderV4.pubkey:
-            return WalletLoaderV4(self.prikey).program_closed(program)
         raise Exception('unreachable')
 
     def program_deploy(self, bincode: bytearray) -> pxsol.core.PubKey:
@@ -342,8 +204,6 @@ class Wallet:
         program_host = pxsol.core.PubKey.base58_decode(program_info['owner'])
         if program_host == pxsol.program.LoaderV3.pubkey:
             return WalletLoaderV3(self.prikey).program_update(program, bincode)
-        if program_host == pxsol.program.LoaderV4.pubkey:
-            return WalletLoaderV4(self.prikey).program_update(program, bincode)
         raise Exception('unreachable')
 
     def sol_balance(self) -> int:
