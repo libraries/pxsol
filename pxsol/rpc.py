@@ -262,7 +262,7 @@ def get_token_supply(pubkey: str, conf: dict) -> dict:
 
 def get_transaction(signature: str, conf: dict) -> dict:
     conf.setdefault('commitment', pxsol.config.current.commitment)
-    conf.setdefault('maxSupportedTransactionVersion', 0)
+    conf.setdefault('maxSupportedTransactionVersion', 1)
     return call('getTransaction', [signature, conf])
 
 

@@ -25,6 +25,9 @@ for e in pxsol.rpc.get_signatures_for_address(args.addr, {'limit': args.limit}):
         case 0x80:
             tx = pxsol.core.TransactionV0.serialize_decode(tx_byte)
             print(tx)
+        case 0x81:
+            tx = pxsol.core.TransactionV1.serialize_decode(tx_byte)
+            print(tx)
         case _:
             tx = pxsol.core.Transaction.serialize_decode(tx_byte)
             print(tx)

@@ -428,6 +428,111 @@ class MessageV0:
         return m
 
 
+class MessageV1:
+    # A Solana transaction message (v1).
+
+    def __init__(
+        self,
+        header: MessageHeader,
+        config: list[int | None],
+        lifetime_specifier: bytearray,
+        account_keys: list[PubKey],
+        instructions: list[Instruction],
+    ) -> None:
+        assert len(config) == 4
+        assert len(lifetime_specifier) == 32
+        self.header = header
+        self.config = config
+        self.lifetime_specifier = lifetime_specifier
+        self.account_keys = account_keys
+        self.instructions = instructions
+
+    def __repr__(self) -> str:
+        return json.dumps(self.json())
+
+    def json(self) -> dict[str, typing.Any]:
+        return {
+            'header': self.header.json(),
+            'config': self.config,
+            'lifetime_specifier': pxsol.base58.encode(self.lifetime_specifier),
+            'account_keys': [key.base58() for key in self.account_keys],
+            'instructions': [instruction.json() for instruction in self.instructions],
+        }
+
+    def serialize(self) -> bytearray:
+        config_mask = 0
+        config_values = []
+        if self.config[0] is not None:
+            config_mask |= 0b00011
+            config_values.append(self.config[0] & 0xffffffff)
+            config_values.append(self.config[0] >> 32)
+        if self.config[1] is not None:
+            config_mask |= 0b00100
+            config_values.append(self.config[1])
+        if self.config[2] is not None:
+            config_mask |= 0b01000
+            config_values.append(self.config[2])
+        if self.config[3] is not None:
+            config_mask |= 0b10000
+            config_values.append(self.config[3])
+        r = bytearray([0x81])
+        r.extend(self.header.serialize())
+        r.extend(config_mask.to_bytes(4, 'little'))
+        r.extend(self.lifetime_specifier)
+        r.append(len(self.instructions))
+        r.append(len(self.account_keys))
+        for e in self.account_keys:
+            r.extend(e.p)
+        for e in config_values:
+            r.extend(e.to_bytes(4, 'little'))
+        for e in self.instructions:
+            r.extend(bytearray([e.program, len(e.account)]))
+            r.extend(len(e.data).to_bytes(2, 'little'))
+        for e in self.instructions:
+            r.extend(bytearray(e.account))
+            r.extend(e.data)
+        assert len(r) <= 4096
+        return r
+
+    @classmethod
+    def serialize_decode(cls, data: bytearray) -> MessageV1:
+        return cls.serialize_decode_reader(io.BytesIO(data))
+
+    @classmethod
+    def serialize_decode_reader(cls, reader: io.BytesIO) -> MessageV1:
+        assert pxsol.io.read_full(reader, 1)[0] == 0x81
+        header = MessageHeader.serialize_decode_reader(reader)
+        config_mask = int.from_bytes(pxsol.io.read_full(reader, 4), 'little')
+        lifetime_specifier = pxsol.io.read_full(reader, 32)
+        instructions_len = pxsol.io.read_full(reader, 1)[0]
+        account_keys = [PubKey(pxsol.io.read_full(reader, 32)) for _ in range(pxsol.io.read_full(reader, 1)[0])]
+        config_values = [pxsol.io.read_full(reader, 4) for _ in range(config_mask.bit_count())]
+        config_values = [int.from_bytes(e, 'little') for e in config_values]
+        config: list[int | None] = [None, None, None, None]
+        if config_mask & 0b00011:
+            config[0] = config_values[0] | (config_values[1] << 32)
+        if config_mask & 0b00100:
+            config[1] = config_values[2]
+        if config_mask & 0b01000:
+            config[2] = config_values[3]
+        if config_mask & 0b10000:
+            config[3] = config_values[4]
+        instructions_header = []
+        instructions = []
+        for _ in range(instructions_len):
+            program = pxsol.io.read_full(reader, 1)[0]
+            account = pxsol.io.read_full(reader, 1)[0]
+            data = int.from_bytes(pxsol.io.read_full(reader, 2), 'little')
+            instructions_header.append([program, account, data])
+        for i in range(instructions_len):
+            h = instructions_header[i]
+            program = h[0]
+            account = list(pxsol.io.read_full(reader, h[1]))
+            data = pxsol.io.read_full(reader, h[2])
+            instructions.append(Instruction(program, account, data))
+        return MessageV1(header, config, lifetime_specifier, account_keys, instructions)
+
+
 class Transaction:
     # An atomically-committed sequence of instructions (legacy).
     # See: https://github.com/anza-xyz/solana-sdk/blob/master/transaction/src/lib.rs
@@ -565,14 +670,59 @@ class TransactionV0:
             self.signatures.append(k.sign(m))
 
 
+class TransactionV1:
+    # An atomically-committed sequence of instructions (v1).
+
+    def __init__(self, signatures: list[bytearray], message: MessageV1) -> None:
+        self.signatures = signatures
+        self.message = message
+
+    def __repr__(self) -> str:
+        return json.dumps(self.json())
+
+    def json(self) -> dict[str, typing.Any]:
+        return {
+            'signatures': [pxsol.base58.encode(e) for e in self.signatures],
+            'message': self.message.json()
+        }
+
+    def serialize(self) -> bytearray:
+        r = bytearray()
+        r.extend(self.message.serialize())
+        for e in self.signatures:
+            r.extend(e)
+        return r
+
+    @classmethod
+    def serialize_decode(cls, data: bytearray) -> TransactionV1:
+        return TransactionV1.serialize_decode_reader(io.BytesIO(data))
+
+    @classmethod
+    def serialize_decode_reader(cls, reader: io.BytesIO) -> TransactionV1:
+        m = MessageV1.serialize_decode_reader(reader)
+        s = []
+        for _ in range(m.header.required_signatures):
+            s.append(pxsol.io.read_full(reader, 64))
+        return TransactionV1(s, m)
+
+    def sign(self, prikey: list[PriKey]) -> None:
+        # Sign the transaction using the given private keys.
+        assert self.message.header.required_signatures == len(prikey)
+        demand = self.message.account_keys[:self.message.header.required_signatures]
+        signer = {e.pubkey(): e for e in prikey}
+        m = self.message.serialize()
+        for e in demand:
+            k = signer[e]
+            self.signatures.append(k.sign(m))
+
+
 class TransactionClassify:
     # Classify the transaction version type.
 
     @classmethod
     def version(cls, data: bytearray) -> int:
-        # Get the transaction version type.
-        # - n <= 0x7f: transaction legacy
-        # - n == 0x80: transaction v0
+        if data[0] == 0x81:
+            return 0x81
         return data[1 + data[0] * 64]
 
 
