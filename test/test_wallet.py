@@ -1,6 +1,7 @@
 import base64
 import pathlib
 import pxsol
+import pytest
 import random
 
 
@@ -23,20 +24,22 @@ def test_loader_v3():
     program_pubkey = user.program_deploy(program_hello_solana)
     assert call_logs(program_pubkey)[1] == 'Program log: Hello, Solana!'
     user.program_update(program_pubkey, program_hello_update)
-    assert call_logs(program_pubkey)[1] == 'Program log: Hello, Solana! Hello Update!'
+    assert call_logs(program_pubkey)[1] == 'Program log: Hello, Solana! Hello, Update!'
     user.program_update(program_pubkey, program_hello_solana)
     assert call_logs(program_pubkey)[1] == 'Program log: Hello, Solana!'
     user.program_closed(program_pubkey)
 
 
 def test_loader_v4():
-    user = pxsol.wallet.WalletLoaderV3(pxsol.core.PriKey.int_decode(1))
+    if pxsol.rpc.get_account_info(pxsol.program.LoaderV4.pubkey.base58(), {}) is None:
+        pytest.skip('Agave 4.2.2 does not provide the abandoned loader-v4 builtin')
+    user = pxsol.wallet.WalletLoaderV4(pxsol.core.PriKey.int_decode(1))
     program_hello_solana = bytearray(pathlib.Path('res/hello_solana_program.so').read_bytes())
     program_hello_update = bytearray(pathlib.Path('res/hello_update_program.so').read_bytes())
     program_pubkey = user.program_deploy(program_hello_solana)
     assert call_logs(program_pubkey)[1] == 'Program log: Hello, Solana!'
     user.program_update(program_pubkey, program_hello_update)
-    assert call_logs(program_pubkey)[1] == 'Program log: Hello, Solana! Hello Update!'
+    assert call_logs(program_pubkey)[1] == 'Program log: Hello, Solana! Hello, Update!'
     user.program_update(program_pubkey, program_hello_solana)
     assert call_logs(program_pubkey)[1] == 'Program log: Hello, Solana!'
     user.program_closed(program_pubkey)
@@ -49,7 +52,7 @@ def test_program():
     program_pubkey = user.program_deploy(program_hello_solana)
     assert call_logs(program_pubkey)[1] == 'Program log: Hello, Solana!'
     user.program_update(program_pubkey, program_hello_update)
-    assert call_logs(program_pubkey)[1] == 'Program log: Hello, Solana! Hello Update!'
+    assert call_logs(program_pubkey)[1] == 'Program log: Hello, Solana! Hello, Update!'
     user.program_update(program_pubkey, program_hello_solana)
     assert call_logs(program_pubkey)[1] == 'Program log: Hello, Solana!'
     user.program_closed(program_pubkey)

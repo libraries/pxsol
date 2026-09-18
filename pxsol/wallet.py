@@ -140,14 +140,14 @@ class WalletLoaderV3:
         assert len(base64.b64decode(program_data_info['data'][0])) == program_data_info['space']
         addi = pxsol.program.LoaderV3.size_program_data + len(bincode) - program_data_info['space']
         if addi > 0:
+            addi = max(addi, 10 * 1024)
             pxsol.log.debugln(f'pxsol: extend program data addi={addi}')
             rq = pxsol.core.Requisition(pxsol.program.LoaderV3.pubkey, [], bytearray())
             rq.account.append(pxsol.core.AccountMeta(program_data, 1))
             rq.account.append(pxsol.core.AccountMeta(program, 1))
-            rq.account.append(pxsol.core.AccountMeta(self.pubkey, 2))
             rq.account.append(pxsol.core.AccountMeta(pxsol.program.System.pubkey, 0))
             rq.account.append(pxsol.core.AccountMeta(self.pubkey, 3))
-            rq.data = pxsol.program.LoaderV3.extend_program_checked(addi)
+            rq.data = pxsol.program.LoaderV3.extend_program(addi)
             tx = pxsol.core.Transaction.requisition_decode(self.pubkey, [rq])
             tx.message.recent_blockhash = pxsol.base58.decode(pxsol.rpc.get_latest_blockhash({})['blockhash'])
             tx.sign([self.prikey])
@@ -333,7 +333,7 @@ class Wallet:
 
     def program_deploy(self, bincode: bytearray) -> pxsol.core.PubKey:
         # Deploying a program on solana, returns the program's public key.
-        return WalletLoaderV4(self.prikey).program_deploy(bincode)
+        return WalletLoaderV3(self.prikey).program_deploy(bincode)
 
     def program_update(self, program: pxsol.core.PubKey, bincode: bytearray) -> None:
         # Updating an existing solana program by new program data and the same program id.
