@@ -140,6 +140,7 @@ class WalletLoaderV3:
         assert len(base64.b64decode(program_data_info['data'][0])) == program_data_info['space']
         addi = pxsol.program.LoaderV3.size_program_data + len(bincode) - program_data_info['space']
         if addi > 0:
+            # See https://github.com/solana-foundation/solana-improvement-documents/blob/main/proposals/0431-minimum-extend-program-size.md
             addi = max(addi, 10 * 1024)
             pxsol.log.debugln(f'pxsol: extend program data addi={addi}')
             rq = pxsol.core.Requisition(pxsol.program.LoaderV3.pubkey, [], bytearray())
