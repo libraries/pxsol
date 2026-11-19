@@ -1,12 +1,14 @@
 import base64
 import itertools
+import random
+import time
+import typing
+
+import requests
+
 import pxsol.config
 import pxsol.log
 import pxsol.rate
-import random
-import requests
-import time
-import typing
 
 # Doc: https://solana.com/docs/rpc/http
 

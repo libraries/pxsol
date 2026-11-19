@@ -1,6 +1,7 @@
 import argparse
 import json
 import pathlib
+
 import pxsol
 
 # Parses a local id.json file and converts it to a different format. The most useful output is in the "prikey/wif"

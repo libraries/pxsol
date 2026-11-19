@@ -1,4 +1,5 @@
 import argparse
+
 import pxsol
 
 # Base58 encode or decode hex string.

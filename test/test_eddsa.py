@@ -1,6 +1,7 @@
+import random
+
 import pxsol
 import pytest
-import random
 
 
 def test_fail_verify():

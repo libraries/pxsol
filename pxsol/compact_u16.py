@@ -1,4 +1,5 @@
 import io
+
 import pxsol.io
 
 # Compact-u16 Encoding Specification

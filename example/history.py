@@ -1,5 +1,6 @@
 import argparse
 import base64
+
 import pxsol
 
 # Shows the last transactions for a address.

@@ -1,7 +1,8 @@
 import base64
 import pathlib
-import pxsol
 import random
+
+import pxsol
 
 
 def call_logs(program_pubkey: pxsol.core.PubKey) -> list[str]:

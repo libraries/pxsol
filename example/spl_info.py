@@ -1,5 +1,6 @@
 import base64
 import json
+
 import pxsol
 
 # An example script to fetch and display spl token mint information.

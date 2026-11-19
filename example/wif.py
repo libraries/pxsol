@@ -1,4 +1,5 @@
 import argparse
+
 import pxsol
 
 # Calculate the wallet import format from the private key. This is useful when you are trying to import an account in

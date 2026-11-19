@@ -1,8 +1,9 @@
 import io
 import itertools
-import pxsol.io
 import struct
 import typing
+
+import pxsol.io
 
 # A python implementation of bincode encoding/decoding for basic types.
 # Source: https://crates.io/crates/solana-bincode

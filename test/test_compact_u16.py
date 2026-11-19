@@ -1,6 +1,7 @@
+import random
+
 import pxsol
 import pytest
-import random
 
 
 def test_compact_u16_success():

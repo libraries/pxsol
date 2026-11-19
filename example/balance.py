@@ -1,4 +1,5 @@
 import argparse
+
 import pxsol
 
 # Get the balance by an address.

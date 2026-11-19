@@ -1,5 +1,6 @@
 import argparse
 import base64
+
 import pxsol
 
 # Apply for PXS airdrop on the mainnet.

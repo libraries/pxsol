@@ -1,11 +1,12 @@
 import hashlib
 import io
 import json
+import secrets
+import typing
+
 import pxsol.base58
 import pxsol.compact_u16
 import pxsol.eddsa
-import secrets
-import typing
 
 
 class PriKey:

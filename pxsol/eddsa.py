@@ -1,4 +1,5 @@
 import hashlib
+
 import pxsol.ed25519
 
 # Edwards-Curve Digital Signature Algorithm (EdDSA)

@@ -1,8 +1,9 @@
 import io
 import itertools
-import pxsol.io
 import struct
 import typing
+
+import pxsol.io
 
 # A python implementation of Borsh serialization/deserialization.
 # Source: https://github.com/near/borsh

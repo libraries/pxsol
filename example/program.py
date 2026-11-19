@@ -1,6 +1,7 @@
 import argparse
 import base64
 import pathlib
+
 import pxsol
 
 # Deploy a hello solana program, call it to show "Hello, Solana!". Then we update the program and call it again, it

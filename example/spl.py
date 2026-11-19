@@ -1,5 +1,6 @@
 import argparse
 import base64
+
 import pxsol
 
 # This is an example centered around solana tokens. You can create a brand-new token, mint fresh tokens, and send them

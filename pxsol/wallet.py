@@ -1,9 +1,10 @@
 import base64
 import json
+import typing
+
 import pxsol.base58
 import pxsol.core
 import pxsol.rpc
-import typing
 
 
 class WalletHelper:

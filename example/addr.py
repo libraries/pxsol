@@ -1,4 +1,5 @@
 import argparse
+
 import pxsol
 
 # Calculate the address from a private key.
