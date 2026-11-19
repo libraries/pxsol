@@ -1,4 +1,4 @@
-import pxsol.compact_u16
+import pxsol
 import pytest
 import random
 
